@@ -82,7 +82,7 @@ To facilitate communication between the pool and the time sources, 4 new NTS rec
 
 The Supported Next Protocol List ({{supportedprotocol}}), Supported Algorithm List ({{supportedalgorithm}}) and List Server Names ({{listservernames}})) records allow the pool to ask a time source which protocols and algorithms it supports, and which server names are used in the NTP server records it generates. This information can be requested by the pool at any time, and can be cached for short periods of time to improve efficiency.
 
-Using knowledge of a time source's supported protocols and algorithms, the pool can then handle client connections for that time source, using the clients indicated desires to choose a concrete next protocol and AEAD algorithm. The pool can then extract the keys from the TLS connection and use the Fixed Key record ({{fixedkey}}) to request cookies for these keys from the time source.
+Using knowledge of a time source's supported protocols and algorithms, the pool can then handle client connections for that time source, using the clients indicated desires to choose a concrete next protocol and AEAD algorithm. The pool can then extract the keys from the TLS connection and use the Fixed Key record ({{fixedkey}}) to request cookies for these keys from the time source. The response to a request containing a Fixed Key record will be the same as that for any regular NTS Key Exchange response, with the exception that the keys will be taken from the Fixed Key record instead of being derived from the TLS connection.
 
 The list of server names provided by the time source can be used by the pool to honor requests by the client to not repeat a certain server. This allows more efficient retrieval of multiple sources from a pool.
 
@@ -90,7 +90,7 @@ As it is wasteful to setup a new TLS session between the pool and the time sourc
 
 ## Authenticating the pool to time sources {#poolauth}
 
-Allowing arbitrary clients to keep connections alive for more that a single request-response interaction could open up the server to denial of service due to resource exhaustion. To prevent this, a pool wishing to use the keep alive functionality MUST authenticate itself to the time source using a TLS Client Authentication as defined in {{RFC8446}}. Time sources MUST check that this authentication was successful, and that the requestor is on the list of requestors allowed to use the keep alive mechanism. By default, the list of requestors allowed to use the keep alive mechanism MUST be empty
+Allowing arbitrary clients to keep connections alive for more that a single request-response interaction could open up the server to denial of service due to resource exhaustion. To prevent this, a pool wishing to use the keep alive functionality MUST authenticate itself to the time source using an Authentication Token record ({{authentication}}). Time sources MUST check that the content of the Authentication Token record matches the authentication string of a client that is on the list of requestors allowed to use the keep alive mechanism. By default, the list of requestors allowed to use the keep alive mechanism MUST be empty
 
 Furthermore, time sources MAY choose to also restrict the Fixed Key, Supported Next Protocol List and Supported Algorithm List to authenticated clients. If this choice is made, it is suggested that the server treat these records as unrecognized critical records on unauthenticated client's connections.
 
@@ -150,7 +150,7 @@ This record can be used by a pool to query time sources about which server names
 
 When a client sends this record the body MUST have size 0. Clients MAY use Keep Alive in combination with this record. Contrary to {{RFC8915}}, a request with this record SHOULD NOT include a "Next Protocol Negotiation", "AEAD Algorithm Negotiation" or "Fixed Key Request" record.
 
-Servers MUST NOT include this record in a response. When receiving this record, servers MUST ignore any body of this record sent by the client, and MUST send in the response one NTP server record for each server name the server may use responses to fixed key requests. If a server never sents a NTP server record in response to a fixed key request, it MAY opt to not provide one in response to this record.
+Servers MUST NOT include this record in a response. When receiving this record, servers MUST ignore any body of this record sent by the client, and MUST send in the response one NTP server record for each server name the server may use responses to fixed key requests. If a server never sends a NTP server record in response to a fixed key request, it MAY opt to not provide one in response to this record.
 
 When receiving this record, a server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
 
@@ -158,7 +158,7 @@ When receiving this record, a server MUST NOT negotiate a next protocol, AEAD al
 Record Type Number: To be assigned by IANA (draft implementations: 0x4002)
 Critical Bit: 1
 
-When a client is properly authenticated, the server SHOULD NOT perform Key Extraction but rather use the keys provided by the client in the extension field. This allows a pool to do key negotiation on behalf of its users with the time source's NTS Key Exchange servers, even though it terminates the TLS connection.
+When a client is properly authenticated, the server SHOULD NOT perform Key Extraction but rather use the keys provided by the client in the extension field. In all other aspects, the response SHALL be the same as that from a regular key exchange session as specified in {{RFC8915}}. This allows a pool to do key negotiation on behalf of its users with the time source's NTS Key Exchange servers, even though it terminates the TLS connection.
 
 When used, the client MUST provide an AEAD Algorithm Negotiation record with precisely one algorithm, and a Next Protocol Negotiation record with precisely one next protocol. The data in the Fixed Key Request record must have length twice the key length N of the AEAD algorithm in the AEAD Algorithm Negotiation record. The first N bytes MUST be the C2S Key and the second set of N bytes MUST be the S2C key. Clients MAY use Keep Alive in combination with this record.
 
@@ -173,6 +173,16 @@ When provided by a client, indicates a desire to connect to a server other than 
 A client MAY send multiple of these records if desired. The data in the record SHOULD match that given through an NTPv4 Server Negotiation received in an earlier response from the same NTS Key Exchange server.
 
 MUST NOT be sent by a server. Server MAY at its discretion ignore the request from the client and still provide the given server in an NTPv4 Server Negotiation record.
+
+## Authentication Token {#authentication}
+Record Type Number: To be assigned by IANA (draft implementations: 0x4005)
+Critical Bit: 0
+
+When provided by a client, gives a proof of their identity through a pre-shared secret token. This can be used to allow only certain clients, for example pools, to use certain functionality of an NTS key exchange server. In particular, it can be used to prevent misuse of the keep alive mechanism by clients other than the pool, preventing resource exhaustion denial of service attack.
+
+This record MUST be sent before records that may be refused if not properly authenticated. A client MUST NOT send more than 1 of this record. The data in the record should be an ASCII string, previously agreed through an out of scope mechanism.
+
+The Authentication Token record MUST NOT be sent by a server. A server MAY use the record to gate acceptance of other records such as the Keep Alive, Fixed Key Request, List Server Names, Supported Algorithm List and Supported Next Protocol List records. A server supporting this record MUST support keys of length at least 64 characters. Keys SHOULD be chosen such that they have at least 128 bits of entropy.
 
 # Security Considerations
 
@@ -206,11 +216,11 @@ IANA is requested to allocate the following entries in the Network Time Security
 | [[TBD]] | List Server Names | [[this memo]] {{listservernames}} |
 | [[TBD]] | Fixed Key Request | [[this memo]] {{fixedkey}} |
 | [[TBD]] | NTP Server Deny | [[this memo]] {{serverdeny}} |
-
+| [[TBD]] | Authentication Token | [[this memo]] {{authentication}} |
 
 --- back
 
 # Acknowledgments
 {:numbered="false"}
 
-The authors thank Marlon Peeters for their input and discussions during the writing of this document.
+The authors thank Marlon Peeters, Ruben Nijveld and Watson Ladd for their input and discussions during the writing of this document.
