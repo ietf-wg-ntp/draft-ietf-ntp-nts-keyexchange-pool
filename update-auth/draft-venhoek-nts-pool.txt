@@ -5,9 +5,9 @@
 ntp                                                           D. Venhoek
 Internet-Draft                                  Trifecta Tech Foundation
 Intended status: Experimental                                F. D. Vries
-Expires: 3 April 2026                                    M. Schoolderman
+Expires: 4 April 2026                                    M. Schoolderman
                                                         Tweede golf B.V.
-                                                       30 September 2025
+                                                          1 October 2025
 
 
                    NTS extensions for enabling pools
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 April 2026.
+   This Internet-Draft will expire on 4 April 2026.
 
 Copyright Notice
 
@@ -405,7 +405,9 @@ Table of Contents
    MUST NOT be sent by a server.  A server MAY use the record to gate
    acceptance of other records such as the Keep Alive, Fixed Key
    Request, List Server Names, Supported Algorithm List and Supported
-   Next Protocol List records.
+   Next Protocol List records.  A server supporting this record MUST
+   support keys of length at least 64 characters.  Keys SHOULD be chosen
+   such that they have at least 128 bits of entropy.
 
 7.  Security Considerations
 
