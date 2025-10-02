@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-09-30T00:23:40.072493+00:00",
+  "timestamp": "2025-10-02T00:22:41.116567+00:00",
   "repo": "pendulum-project/nts-pool-draft",
   "labels": [
     {
@@ -585,6 +585,86 @@
       },
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 14,
+      "id": "PR_kwDOK6Dtvs6rUC7A",
+      "title": "Switch from TLS to shared secret authentication.",
+      "url": "https://github.com/pendulum-project/nts-pool-draft/pull/14",
+      "state": "OPEN",
+      "author": "davidv1992",
+      "authorAssociation": "MEMBER",
+      "assignees": [],
+      "labels": [],
+      "body": "Also includes some minor textual streamlining.",
+      "createdAt": "2025-09-30T11:36:34Z",
+      "updatedAt": "2025-10-01T18:27:59Z",
+      "baseRepository": "pendulum-project/nts-pool-draft",
+      "baseRefName": "main",
+      "baseRefOid": "8f4b9f70fd2c8a249020e448fa3c7b4b559ba2fd",
+      "headRepository": "pendulum-project/nts-pool-draft",
+      "headRefName": "update-auth",
+      "headRefOid": "c9f9c573c549d575201905b1fe7dd0d53534cba6",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOK6Dtvs7D-pQj",
+          "commit": {
+            "abbreviatedOid": "f4e325f"
+          },
+          "author": "rnijveld",
+          "authorAssociation": "MEMBER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-10-01T07:54:57Z",
+          "updatedAt": "2025-10-01T07:54:57Z",
+          "comments": [
+            {
+              "originalPosition": 40,
+              "body": "Should we add anything about the length of the ASCII string (i.e. security considerations, what is an acceptable length)? Are there any min or max lengths implementations should/must accept?",
+              "createdAt": "2025-10-01T07:54:57Z",
+              "updatedAt": "2025-10-01T07:54:58Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOK6Dtvs7EBMav",
+          "commit": {
+            "abbreviatedOid": "c9f9c57"
+          },
+          "author": "rnijveld",
+          "authorAssociation": "MEMBER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2025-10-01T11:24:57Z",
+          "updatedAt": "2025-10-01T11:24:57Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOK6Dtvs7EIK21",
+          "commit": {
+            "abbreviatedOid": "c9f9c57"
+          },
+          "author": "rnijveld",
+          "authorAssociation": "MEMBER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2025-10-01T18:27:59Z",
+          "updatedAt": "2025-10-01T18:27:59Z",
+          "comments": [
+            {
+              "originalPosition": 40,
+              "body": "One more thing I noticed while reviewing the ntpd-rs code: I think this might be better named as 'Authentication Token'",
+              "createdAt": "2025-10-01T18:27:59Z",
+              "updatedAt": "2025-10-01T18:28:00Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
