@@ -5,9 +5,9 @@
 ntp                                                           D. Venhoek
 Internet-Draft                                  Trifecta Tech Foundation
 Intended status: Experimental                                F. D. Vries
-Expires: 4 April 2026                                    M. Schoolderman
+Expires: 5 April 2026                                    M. Schoolderman
                                                         Tweede golf B.V.
-                                                          1 October 2025
+                                                          2 October 2025
 
 
                    NTS extensions for enabling pools
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 April 2026.
+   This Internet-Draft will expire on 5 April 2026.
 
 Copyright Notice
 
@@ -81,7 +81,7 @@ Table of Contents
      6.4.  List Server Names
      6.5.  Fixed Key Request
      6.6.  NTP Server Deny
-     6.7.  Authentication
+     6.7.  Authentication Token
    7.  Security Considerations
      7.1.  Pool's position
      7.2.  Keep alive and denial of service attack risk
@@ -191,12 +191,12 @@ Table of Contents
    single request-response interaction could open up the server to
    denial of service due to resource exhaustion.  To prevent this, a
    pool wishing to use the keep alive functionality MUST authenticate
-   itself to the time source using an Authentication record
+   itself to the time source using an Authentication Token record
    (Section 6.7).  Time sources MUST check that the content of the
-   authentication record matches the authentication string of a client
-   that is on the list of requestors allowed to use the keep alive
-   mechanism.  By default, the list of requestors allowed to use the
-   keep alive mechanism MUST be empty
+   Authentication Token record matches the authentication string of a
+   client that is on the list of requestors allowed to use the keep
+   alive mechanism.  By default, the list of requestors allowed to use
+   the keep alive mechanism MUST be empty
 
    Furthermore, time sources MAY choose to also restrict the Fixed Key,
    Supported Next Protocol List and Supported Algorithm List to
@@ -386,7 +386,7 @@ Table of Contents
    the request from the client and still provide the given server in an
    NTPv4 Server Negotiation record.
 
-6.7.  Authentication
+6.7.  Authentication Token
 
    Record Type Number: To be assigned by IANA (draft implementations:
    0x4005) Critical Bit: 0
@@ -398,16 +398,18 @@ Table of Contents
    of the keep alive mechanism by clients other than the pool,
    preventing resource exhaustion denial of service attack.
 
-   A client MUST send at most one of these records.  The data in the
-   record should be an ASCII string, previously agreed through an out of
-   scope mechanism.
+   This record MUST be sent before records that may be refused if not
+   properly authenticated.  A client MUST NOT send more than 1 of this
+   record.  The data in the record should be an ASCII string, previously
+   agreed through an out of scope mechanism.
 
-   MUST NOT be sent by a server.  A server MAY use the record to gate
-   acceptance of other records such as the Keep Alive, Fixed Key
-   Request, List Server Names, Supported Algorithm List and Supported
-   Next Protocol List records.  A server supporting this record MUST
-   support keys of length at least 64 characters.  Keys SHOULD be chosen
-   such that they have at least 128 bits of entropy.
+   The Authentication Token record MUST NOT be sent by a server.  A
+   server MAY use the record to gate acceptance of other records such as
+   the Keep Alive, Fixed Key Request, List Server Names, Supported
+   Algorithm List and Supported Next Protocol List records.  A server
+   supporting this record MUST support keys of length at least 64
+   characters.  Keys SHOULD be chosen such that they have at least 128
+   bits of entropy.
 
 7.  Security Considerations
 
@@ -485,6 +487,9 @@ Table of Contents
     | [[TBD]]            | NTP Server     | [[this memo]] Section 6.6 |
     |                    | Deny           |                           |
     +--------------------+----------------+---------------------------+
+    | [[TBD]]            | Authentication | [[this memo]] Section 6.7 |
+    |                    | Token          |                           |
+    +--------------------+----------------+---------------------------+
 
                                   Table 1
 
@@ -521,8 +526,8 @@ Table of Contents
 
 Acknowledgments
 
-   The authors thank Marlon Peeters for their input and discussions
-   during the writing of this document.
+   The authors thank Marlon Peeters, Ruben Nijveld and Watson Ladd for
+   their input and discussions during the writing of this document.
 
 Authors' Addresses
 
