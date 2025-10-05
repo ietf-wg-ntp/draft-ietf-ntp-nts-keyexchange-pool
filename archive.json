@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-10-02T00:22:41.116567+00:00",
+  "timestamp": "2025-10-05T00:25:49.571883+00:00",
   "repo": "pendulum-project/nts-pool-draft",
   "labels": [
     {
@@ -598,13 +598,13 @@
       "labels": [],
       "body": "Also includes some minor textual streamlining.",
       "createdAt": "2025-09-30T11:36:34Z",
-      "updatedAt": "2025-10-01T18:27:59Z",
+      "updatedAt": "2025-10-02T08:41:47Z",
       "baseRepository": "pendulum-project/nts-pool-draft",
       "baseRefName": "main",
       "baseRefOid": "8f4b9f70fd2c8a249020e448fa3c7b4b559ba2fd",
       "headRepository": "pendulum-project/nts-pool-draft",
       "headRefName": "update-auth",
-      "headRefOid": "c9f9c573c549d575201905b1fe7dd0d53534cba6",
+      "headRefOid": "119ba2dbd51ec047ce6ea0dcb8a24ab124108def",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
