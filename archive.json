@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-10-28T00:23:29.989156+00:00",
+  "timestamp": "2025-10-30T00:25:14.189702+00:00",
   "repo": "pendulum-project/nts-pool-draft",
   "labels": [
     {
@@ -591,24 +591,26 @@
       "id": "PR_kwDOK6Dtvs6rUC7A",
       "title": "Switch from TLS to shared secret authentication.",
       "url": "https://github.com/pendulum-project/nts-pool-draft/pull/14",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidv1992",
       "authorAssociation": "MEMBER",
       "assignees": [],
       "labels": [],
       "body": "Also includes some minor textual streamlining.",
       "createdAt": "2025-09-30T11:36:34Z",
-      "updatedAt": "2025-10-02T08:41:47Z",
+      "updatedAt": "2025-10-29T10:16:23Z",
       "baseRepository": "pendulum-project/nts-pool-draft",
       "baseRefName": "main",
       "baseRefOid": "8f4b9f70fd2c8a249020e448fa3c7b4b559ba2fd",
       "headRepository": "pendulum-project/nts-pool-draft",
       "headRefName": "update-auth",
       "headRefOid": "119ba2dbd51ec047ce6ea0dcb8a24ab124108def",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-10-29T10:16:23Z",
+      "mergedAt": "2025-10-29T10:16:23Z",
+      "mergedBy": "davidv1992",
+      "mergeCommit": {
+        "oid": "879c1157ec32ad10da0267f1b5291ff65cb0c8a9"
+      },
       "comments": [],
       "reviews": [
         {
