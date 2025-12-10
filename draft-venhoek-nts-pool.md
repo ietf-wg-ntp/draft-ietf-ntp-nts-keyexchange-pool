@@ -143,7 +143,7 @@ When included, the server MUST NOT negotiate a next protocol, AEAD algorithm, or
 We include the algorithm key size in the response so that a pool does not itself need knowledge of which AEAD algorithms exist, and what their key sizes are. Instead, it can use the provided key length when extracting keys from the TLS connection between end user and pool. This allows adoption of new AEAD algorithms without any changes to the pool software.
 
 ## List Server Names {#listservernames}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4005)
+Record Type Number: To be assigned by IANA (draft implementations: 0x4006)
 Critical bit: 1
 
 This record can be used by a pool to query time sources about which server names they use in NTP server records in their responses.
@@ -182,7 +182,7 @@ When provided by a client, gives a proof of their identity through a pre-shared 
 
 This record MUST be sent before records that may be refused if not properly authenticated. A client MUST NOT send more than 1 of this record. The data in the record should be an ASCII string, previously agreed through an out of scope mechanism.
 
-The Authentication Token record MUST NOT be sent by a server. A server MAY use the record to gate acceptance of other records such as the Keep Alive, Fixed Key Request, List Server Names, Supported Algorithm List and Supported Next Protocol List records. A server supporting this record MUST support keys of length at least 64 characters. Keys SHOULD be chosen such that they have at least 128 bits of entropy.
+The Authentication Token record MUST NOT be sent by a server. A server MAY use the record to gate acceptance of other records such as the Keep Alive, Fixed Key Request, List Server Names, Supported Algorithm List and Supported Next Protocol List records. A server supporting this record MUST support keys of length at least 64 characters. Keys SHOULD be chosen such that they have at least 128 bits of entropy. When using only letters and numbers this corresponds to at least 22 characters, and when using only hexadecimal digits, at least 32 characters.
 
 # Security Considerations
 
