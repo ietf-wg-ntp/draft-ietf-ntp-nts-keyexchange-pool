@@ -5,9 +5,9 @@
 ntp                                                           D. Venhoek
 Internet-Draft                                  Trifecta Tech Foundation
 Intended status: Experimental                                F. D. Vries
-Expires: 2 May 2026                                      M. Schoolderman
+Expires: 13 June 2026                                    M. Schoolderman
                                                         Tweede golf B.V.
-                                                         29 October 2025
+                                                        10 December 2025
 
 
                    NTS extensions for enabling pools
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 May 2026.
+   This Internet-Draft will expire on 13 June 2026.
 
 Copyright Notice
 
@@ -318,7 +318,7 @@ Table of Contents
 6.4.  List Server Names
 
    Record Type Number: To be assigned by IANA (draft implementations:
-   0x4005) Critical bit: 1
+   0x4006) Critical bit: 1
 
    This record can be used by a pool to query time sources about which
    server names they use in NTP server records in their responses.
@@ -409,7 +409,9 @@ Table of Contents
    Algorithm List and Supported Next Protocol List records.  A server
    supporting this record MUST support keys of length at least 64
    characters.  Keys SHOULD be chosen such that they have at least 128
-   bits of entropy.
+   bits of entropy.  When using only letters and numbers this
+   corresponds to at least 22 characters, and when using only
+   hexadecimal digits, at least 32 characters.
 
 7.  Security Considerations
 
