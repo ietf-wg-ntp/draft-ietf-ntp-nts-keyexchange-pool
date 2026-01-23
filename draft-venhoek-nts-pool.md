@@ -28,9 +28,9 @@ author:
     organization: Trifecta Tech Foundation
     email: "david@tweedegolf.com"
  -
-    fullname: "Folkert de Vries"
-    organization: Tweede golf B.V.
-    email: "folkert@tweedegolf.com"
+    fullname: "Ruben Nijveld"
+    organization: Trifecta Tech Foundation
+    email: "ruben@tweedegolf.com"
  -
     fullname: "Marc Schoolderman"
     organization: Tweede golf B.V.
@@ -48,7 +48,7 @@ informative:
 
 --- abstract
 
-The aim of this document is to describe a proof of concept system for NTS pools that are able to be used by clients without any knowledge beyond plain NTS. The work here focuses purely on creating an intermediate NTS Key Exchange server that can be configured with the addresses of multiple servers and distribute load between them. The parts of pool operation dealing with managing the list of servers are left out of scope for this work.
+The aim of this document is to describe a system for NTS pools that are able to be used by clients without any knowledge beyond plain NTS. The work here focuses purely on creating an intermediate NTS Key Exchange server that can be configured with the addresses of multiple servers and distribute load between them. The parts of pool operation dealing with managing the list of servers are left out of scope for this work.
 
 --- middle
 
@@ -56,7 +56,7 @@ The aim of this document is to describe a proof of concept system for NTS pools 
 
 NTS {{RFC8915}} provides authenticity and limited confidentiality for NTP {{RFC5905}}. However, the key exchange preceding the actual time exchange makes it hard to implement a pool for NTS supporting servers in a manner similar to the DNS resolution approach taken to provide the NTP Pool {{Pool}}.
 
-This document aims to provide extensions to the NTS Key Exchange sessions that allow for an implementation of a pool for NTS that:
+This document provides extensions to the NTS Key Exchange sessions that allow for an implementation of a pool for NTS that:
 
   - is usable without changes to the client,
   - avoids constraining the time source's cookie format,
@@ -68,6 +68,8 @@ Throughout the text, the terms client and server will refer to those roles in an
 
 Where further specificity of the role of a participant is needed, we will use the term user to indicate a user of a pool, the term pool to indicate the pool itself, and time source for the time servers that the pool delegates the actual providing of time to.
 
+This document follows the conventions used in {{RFC8915}} for the layout of NTS records on the wire.
+
 {::boilerplate bcp14-tagged}
 
 # General pool architecture
@@ -78,9 +80,9 @@ In {{RFC8915}}, cookies are generated based on key material that is extracted fr
 
 # Communication between the pool and time sources
 
-To facilitate communication between the pool and the time sources, 4 new NTS records are defined in {{records}}. Together these records provide a way for the pool to provide key exchange services to clients on behalf of the time sources.
+To facilitate communication between the pool and the time sources, six new NTS records are defined in {{records}}. Together these records provide a way for the pool to provide key exchange services to clients on behalf of the time sources.
 
-The Supported Next Protocol List ({{supportedprotocol}}), Supported Algorithm List ({{supportedalgorithm}}) and List Server Names ({{listservernames}})) records allow the pool to ask a time source which protocols and algorithms it supports, and which server names are used in the NTP server records it generates. This information can be requested by the pool at any time, and can be cached for short periods of time to improve efficiency.
+The Supported Next Protocol List ({{supportedprotocol}}), Supported Algorithm List ({{supportedalgorithm}}) and List Server Names ({{listservernames}}) records allow the pool to ask a time source which protocols and algorithms it supports, and which server names are used in the NTP server records ({{RFC8915, Section 4.1.7}}) it generates. This information can be requested by the pool at any time, and can be cached for short periods of time to improve efficiency.
 
 Using knowledge of a time source's supported protocols and algorithms, the pool can then handle client connections for that time source, using the clients indicated desires to choose a concrete next protocol and AEAD algorithm. The pool can then extract the keys from the TLS connection and use the Fixed Key record ({{fixedkey}}) to request cookies for these keys from the time source. The response to a request containing a Fixed Key record will be the same as that for any regular NTS Key Exchange response, with the exception that the keys will be taken from the Fixed Key record instead of being derived from the TLS connection.
 
@@ -124,9 +126,9 @@ This record can be used by a pool to query time sources about which next protoco
 
 When a client sends this record the body MUST have size 0. Clients MAY use Keep Alive in combination with this record. Contrary to {{RFC8915}}, a request with this record SHOULD NOT include a "Next Protocol Negotiation", "AEAD Algorithm Negotiation" or "Fixed Key Request" record.
 
-When receiving this record, servers MUST ignore any client body sent and MUST send in the response a Supported Next Protocol List record with as data a list of 16-bit integers, giving the protocol IDs the server supports. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
+When receiving this record, servers MUST ignore any client body sent and MUST send in the response a Supported Next Protocol List record with as data a list of 16-bit integers, giving the protocol IDs the server supports.
 
-When included, the server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request.
+When receiving this record, a server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
 
 ## Supported Algorithm List {#supportedalgorithm}
 Record Type Number: To be assigned by IANA (draft implementations: 0x4001)
@@ -136,9 +138,9 @@ This record can be used by a pool to query time sources about which AEAD algorit
 
 When a client sends this record the body MUST have size 0. Clients MAY use Keep Alive in combination with this record. Contrary to {{RFC8915}}, a request with this record SHOULD NOT include a "Next Protocol Negotiation", "AEAD Algorithm Negotiation" or "Fixed Key Request" record.
 
-When receiving this record, servers MUST ignore any client body sent and MUST send in the response a Supported Algorithm List record with as data a list of tuples of two 16-bit integers, the first giving an algorithm ID for the AEAD and the second giving the length of the key for that algorithm ID. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
+When receiving this record, servers MUST ignore any client body sent and MUST send in the response a Supported Algorithm List record with as data a list of tuples of two 16-bit integers, the first giving an algorithm ID for the AEAD and the second giving the length of the key for that algorithm ID.
 
-When included, the server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request.
+When receiving this record, a server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
 
 We include the algorithm key size in the response so that a pool does not itself need knowledge of which AEAD algorithms exist, and what their key sizes are. Instead, it can use the provided key length when extracting keys from the TLS connection between end user and pool. This allows adoption of new AEAD algorithms without any changes to the pool software.
 
@@ -180,7 +182,7 @@ Critical Bit: 0
 
 When provided by a client, gives a proof of their identity through a pre-shared secret token. This can be used to allow only certain clients, for example pools, to use certain functionality of an NTS key exchange server. In particular, it can be used to prevent misuse of the keep alive mechanism by clients other than the pool, preventing resource exhaustion denial of service attack.
 
-This record MUST be sent before records that may be refused if not properly authenticated. A client MUST NOT send more than 1 of this record. The data in the record should be an ASCII string, previously agreed through an out of scope mechanism.
+This record MUST be sent before records that may be refused if not properly authenticated. A client MUST NOT send more than 1 of this record. The data in the record should be an ASCII string that MUST NOT be null terminated, previously agreed through an out of scope mechanism.
 
 The Authentication Token record MUST NOT be sent by a server. A server MAY use the record to gate acceptance of other records such as the Keep Alive, Fixed Key Request, List Server Names, Supported Algorithm List and Supported Next Protocol List records. A server supporting this record MUST support keys of length at least 64 characters. Keys SHOULD be chosen such that they have at least 128 bits of entropy. When using only letters and numbers this corresponds to at least 22 characters, and when using only hexadecimal digits, at least 32 characters.
 
@@ -198,7 +200,15 @@ It must be noted that clients need to trust the pool to check the TLS certificat
 
 ## Keep alive and denial of service attack risk
 
-The Keep Alive NTS record allows a client to keep an NTS key exchange connection open for significantly longer than usual. If arbitrary clients were allowed to do this, they could use it trivially run a server out of resources such as file descriptors. It is therefore important that public servers restrict keeping connections alive to a limited set of trusted clients. The suggested mechanism for doing this is to use TLS client authentication for these clients.
+The Keep Alive NTS record allows a client to keep an NTS key exchange connection open for significantly longer than usual. If arbitrary clients were allowed to do this, they could use it trivially run a server out of resources such as file descriptors. It is therefore important that public servers restrict keeping connections alive to a limited set of trusted clients. The recommended mechanism for doing this is through token authentication via the authentication token record {{authentication}}.
+
+The token used in token authentication is a symmetric authentication secret, known to both the pool and the time source. Its security in transit is guaranteed by the protections from the TLS connection. Pools SHOULD provide methods for updating these keys to provide time sources an option should the used authentication token leak. Updating these keys is presumed to be done using an out of band method out of scope for this text.
+
+## Unwanted addition to a pool
+
+This document does not specify an explicit mechanism for pools to identify whether a timesource wants to be part of the pool. Such a mechanism is considered out of scope.
+
+However, clients that wish to restrict their inclusion in pools of the type described in this document may choose to also enforce the token authentication for use of the Fixed Key Request record from {{fixedkey}}, and the Supported Protocol and Supported Algorithm records from {{supportedprotocol}} and {{supportedalgorithm}}. Doing so effectively prevents the time source from being included in a pool without explicit configuration, providing control for the time source operator over which pools their time source is included in.
 
 ## Error handling
 
@@ -223,4 +233,4 @@ IANA is requested to allocate the following entries in the Network Time Security
 # Acknowledgments
 {:numbered="false"}
 
-The authors thank Marlon Peeters, Ruben Nijveld and Watson Ladd for their input and discussions during the writing of this document.
+The authors thank Marlon Peeters, Folkert de Vries and Watson Ladd for their input and discussions during the writing of this document.
