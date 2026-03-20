@@ -2,7 +2,7 @@
 
 
 
-ntp                                                           D. Venhoek
+Network Time Protocols                                        D. Venhoek
 Internet-Draft                                                R. Nijveld
 Intended status: Experimental                   Trifecta Tech Foundation
 Expires: 21 September 2026                               M. Schoolderman
@@ -32,6 +32,11 @@ About This Document
    keyexchange-pool.html.  Status information for this document may be
    found at https://datatracker.ietf.org/doc/draft-ietf-ntp-nts-
    keyexchange-pool/.
+
+   Discussion of this document takes place on the Network Time Protocols
+   Working Group mailing list (mailto:ntp@ietf.org), which is archived
+   at https://mailarchive.ietf.org/arch/browse/ntp/.  Subscribe at
+   https://www.ietf.org/mailman/listinfo/ntp/.
 
    Source for this draft and an issue tracker can be found at
    https://github.com/ietf-wg-ntp/draft-ietf-ntp-nts-keyexchange-pool.
