@@ -3,7 +3,7 @@ title: "NTS extensions for enabling pools"
 abbrev: "NTS pools"
 category: exp
 
-docname: draft-venhoek-nts-pool-latest
+docname: draft-ietf-ntp-nts-keyexchange-pool-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
@@ -19,8 +19,8 @@ venue:
 #  type: Working Group
 #  mail: WG@example.com
 #  arch: https://example.com/WG
-  github: "pendulum-project/nts-pool-draft"
-  latest: "https://pendulum-project.github.io/nts-pool-draft/draft-venhoek-nts-pool.html"
+  github: "ietf-wg-ntp/draft-ietf-ntp-nts-keyexchange-pool"
+  latest: "https://ietf-wg-ntp.github.io/draft-ietf-ntp-nts-keyexchange-pool/draft-ietf-ntp-nts-keyexchange-pool.html"
 
 author:
  -
