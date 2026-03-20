@@ -2,22 +2,21 @@
 
 # NTS extensions for enabling pools
 
-This is the working area for the individual Internet-Draft, "NTS extensions for enabling pools".
+This is the working area for the IETF [NTP Working Group](https://datatracker.ietf.org/group/ntp/documents/) Internet-Draft, "NTS extensions for enabling pools".
 
-* [Editor's Copy](https://pendulum-project.github.io/nts-pool-draft/#go.draft-venhoek-nts-pool.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-venhoek-nts-pool)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-venhoek-nts-pool)
-* [Compare Editor's Copy to Individual Draft](https://pendulum-project.github.io/nts-pool-draft/#go.draft-venhoek-nts-pool.diff)
+* [Editor's Copy](https://ietf-wg-ntp.github.io/draft-ietf-ntp-nts-keyexchange-pool/#go.draft-ietf-ntp-nts-keyexchange-pool.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-ietf-ntp-nts-keyexchange-pool)
+* [Working Group Draft](https://datatracker.ietf.org/doc/html/draft-ietf-ntp-nts-keyexchange-pool)
+* [Compare Editor's Copy to Working Group Draft](https://ietf-wg-ntp.github.io/draft-ietf-ntp-nts-keyexchange-pool/#go.draft-ietf-ntp-nts-keyexchange-pool.diff)
 
 
 ## Contributing
 
 See the
-[guidelines for contributions](https://github.com/pendulum-project/nts-pool-draft/blob/main/CONTRIBUTING.md).
+[guidelines for contributions](https://github.com/ietf-wg-ntp/draft-ietf-ntp-nts-keyexchange-pool/blob/main/CONTRIBUTING.md).
 
-Contributions can be made by creating pull requests.
-The GitHub interface supports creating pull requests using the Edit (✏) button.
-
+The contributing file also has tips on how to make contributions, if you
+don't already know how to do that.
 
 ## Command Line Usage
 
