@@ -3,11 +3,11 @@
 
 
 ntp                                                           D. Venhoek
-Internet-Draft                                  Trifecta Tech Foundation
-Intended status: Experimental                                F. D. Vries
-Expires: 13 June 2026                                    M. Schoolderman
+Internet-Draft                                                R. Nijveld
+Intended status: Experimental                   Trifecta Tech Foundation
+Expires: 21 September 2026                               M. Schoolderman
                                                         Tweede golf B.V.
-                                                        10 December 2025
+                                                           20 March 2026
 
 
                    NTS extensions for enabling pools
@@ -15,13 +15,13 @@ Expires: 13 June 2026                                    M. Schoolderman
 
 Abstract
 
-   The aim of this document is to describe a proof of concept system for
-   NTS pools that are able to be used by clients without any knowledge
-   beyond plain NTS.  The work here focuses purely on creating an
-   intermediate NTS Key Exchange server that can be configured with the
-   addresses of multiple servers and distribute load between them.  The
-   parts of pool operation dealing with managing the list of servers are
-   left out of scope for this work.
+   The aim of this document is to describe a system for NTS pools that
+   are able to be used by clients without any knowledge beyond plain
+   NTS.  The work here focuses purely on creating an intermediate NTS
+   Key Exchange server that can be configured with the addresses of
+   multiple servers and distribute load between them.  The parts of pool
+   operation dealing with managing the list of servers are left out of
+   scope for this work.
 
 About This Document
 
@@ -50,11 +50,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 June 2026.
+   This Internet-Draft will expire on 21 September 2026.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -85,7 +85,8 @@ Table of Contents
    7.  Security Considerations
      7.1.  Pool's position
      7.2.  Keep alive and denial of service attack risk
-     7.3.  Error handling
+     7.3.  Unwanted addition to a pool
+     7.4.  Error handling
    8.  IANA Considerations
    9.  References
      9.1.  Normative References
@@ -101,8 +102,8 @@ Table of Contents
    in a manner similar to the DNS resolution approach taken to provide
    the NTP Pool [Pool].
 
-   This document aims to provide extensions to the NTS Key Exchange
-   sessions that allow for an implementation of a pool for NTS that:
+   This document provides extensions to the NTS Key Exchange sessions
+   that allow for an implementation of a pool for NTS that:
 
    *  is usable without changes to the client,
 
@@ -122,6 +123,9 @@ Table of Contents
    will use the term user to indicate a user of a pool, the term pool to
    indicate the pool itself, and time source for the time servers that
    the pool delegates the actual providing of time to.
+
+   This document follows the conventions used in [RFC8915] for the
+   layout of NTS records on the wire.
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -149,18 +153,18 @@ Table of Contents
 
 4.  Communication between the pool and time sources
 
-   To facilitate communication between the pool and the time sources, 4
-   new NTS records are defined in Section 6.  Together these records
+   To facilitate communication between the pool and the time sources,
+   six new NTS records are defined in Section 6.  Together these records
    provide a way for the pool to provide key exchange services to
    clients on behalf of the time sources.
 
    The Supported Next Protocol List (Section 6.2), Supported Algorithm
-   List (Section 6.3) and List Server Names (Section 6.4)) records allow
+   List (Section 6.3) and List Server Names (Section 6.4) records allow
    the pool to ask a time source which protocols and algorithms it
    supports, and which server names are used in the NTP server records
-   it generates.  This information can be requested by the pool at any
-   time, and can be cached for short periods of time to improve
-   efficiency.
+   ([RFC8915], Section 4.1.7) it generates.  This information can be
+   requested by the pool at any time, and can be cached for short
+   periods of time to improve efficiency.
 
    Using knowledge of a time source's supported protocols and
    algorithms, the pool can then handle client connections for that time
@@ -278,11 +282,12 @@ Table of Contents
    When receiving this record, servers MUST ignore any client body sent
    and MUST send in the response a Supported Next Protocol List record
    with as data a list of 16-bit integers, giving the protocol IDs the
-   server supports.  A server MAY treat this record as unknown for
-   clients that are not authenticated as described in Section 4.1.
+   server supports.
 
-   When included, the server MUST NOT negotiate a next protocol, AEAD
-   algorithm, or keys for this request.
+   When receiving this record, a server MUST NOT negotiate a next
+   protocol, AEAD algorithm, or keys for this request.  A server MAY
+   treat this record as unknown for clients that are not authenticated
+   as described in Section 4.1.
 
 6.3.  Supported Algorithm List
 
@@ -302,11 +307,12 @@ Table of Contents
    and MUST send in the response a Supported Algorithm List record with
    as data a list of tuples of two 16-bit integers, the first giving an
    algorithm ID for the AEAD and the second giving the length of the key
-   for that algorithm ID.  A server MAY treat this record as unknown for
-   clients that are not authenticated as described in Section 4.1.
+   for that algorithm ID.
 
-   When included, the server MUST NOT negotiate a next protocol, AEAD
-   algorithm, or keys for this request.
+   When receiving this record, a server MUST NOT negotiate a next
+   protocol, AEAD algorithm, or keys for this request.  A server MAY
+   treat this record as unknown for clients that are not authenticated
+   as described in Section 4.1.
 
    We include the algorithm key size in the response so that a pool does
    not itself need knowledge of which AEAD algorithms exist, and what
@@ -400,8 +406,9 @@ Table of Contents
 
    This record MUST be sent before records that may be refused if not
    properly authenticated.  A client MUST NOT send more than 1 of this
-   record.  The data in the record should be an ASCII string, previously
-   agreed through an out of scope mechanism.
+   record.  The data in the record should be an ASCII string that MUST
+   NOT be null terminated, previously agreed through an out of scope
+   mechanism.
 
    The Authentication Token record MUST NOT be sent by a server.  A
    server MAY use the record to gate acceptance of other records such as
@@ -448,10 +455,34 @@ Table of Contents
    clients were allowed to do this, they could use it trivially run a
    server out of resources such as file descriptors.  It is therefore
    important that public servers restrict keeping connections alive to a
-   limited set of trusted clients.  The suggested mechanism for doing
-   this is to use TLS client authentication for these clients.
+   limited set of trusted clients.  The recommended mechanism for doing
+   this is through token authentication via the authentication token
+   record Section 6.7.
 
-7.3.  Error handling
+   The token used in token authentication is a symmetric authentication
+   secret, known to both the pool and the time source.  Its security in
+   transit is guaranteed by the protections from the TLS connection.
+   Pools SHOULD provide methods for updating these keys to provide time
+   sources an option should the used authentication token leak.
+   Updating these keys is presumed to be done using an out of band
+   method out of scope for this text.
+
+7.3.  Unwanted addition to a pool
+
+   This document does not specify an explicit mechanism for pools to
+   identify whether a timesource wants to be part of the pool.  Such a
+   mechanism is considered out of scope.
+
+   However, clients that wish to restrict their inclusion in pools of
+   the type described in this document may choose to also enforce the
+   token authentication for use of the Fixed Key Request record from
+   Section 6.5, and the Supported Protocol and Supported Algorithm
+   records from Section 6.2 and Section 6.3.  Doing so effectively
+   prevents the time source from being included in a pool without
+   explicit configuration, providing control for the time source
+   operator over which pools their time source is included in.
+
+7.4.  Error handling
 
    To avoid giving multiple time sources access to the key material of
    the end user, it is important that the keys extracted from the TLS
@@ -528,8 +559,8 @@ Table of Contents
 
 Acknowledgments
 
-   The authors thank Marlon Peeters, Ruben Nijveld and Watson Ladd for
-   their input and discussions during the writing of this document.
+   The authors thank Marlon Peeters, Folkert de Vries and Watson Ladd
+   for their input and discussions during the writing of this document.
 
 Authors' Addresses
 
@@ -538,9 +569,9 @@ Authors' Addresses
    Email: david@tweedegolf.com
 
 
-   Folkert de Vries
-   Tweede golf B.V.
-   Email: folkert@tweedegolf.com
+   Ruben Nijveld
+   Trifecta Tech Foundation
+   Email: ruben@tweedegolf.com
 
 
    Marc Schoolderman
