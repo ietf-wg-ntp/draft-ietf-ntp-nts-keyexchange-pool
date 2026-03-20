@@ -9,16 +9,16 @@ number:
 date:
 consensus: true
 v: 3
-area: INT
-workgroup: ntp
+area: "Internet"
+workgroup: "Network Time Protocols"
 keyword:
  - NTP
  - NTS
 venue:
-#  group: WG
-#  type: Working Group
-#  mail: WG@example.com
-#  arch: https://example.com/WG
+  group: "Network Time Protocols"
+  type: "Working Group"
+  mail: "ntp@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/ntp/"
   github: "ietf-wg-ntp/draft-ietf-ntp-nts-keyexchange-pool"
   latest: "https://ietf-wg-ntp.github.io/draft-ietf-ntp-nts-keyexchange-pool/draft-ietf-ntp-nts-keyexchange-pool.html"
 
