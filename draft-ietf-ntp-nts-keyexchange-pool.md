@@ -78,6 +78,20 @@ We propose a pool model where the pool provides an NTS Key Exchange service to t
 
 In {{RFC8915}}, cookies are generated based on key material that is extracted from this TLS connection. Our proposed model instead establishes two TLS connections: between the client and the pool, and between the pool and the time source. Because cookies need to be generated using key material from the client, the pool extracts this key material and sends it to the time source. The time source uses this key material (rather than key material extracted from its connection with the pool) to generate cookies. This way, the pool can remain oblivious to the cookie format of the time source.
 
+## Session flow between client, pool and time source
+
+In our proposed pool model, a session of a client with the pool is handled through the following steps:
+1) The client presents itself to the pools NTS key exchange server, sending it its request.
+2) The pool parses this requests, and assigns a time source to the request.
+3) The pool then asks that time source which protocols and algorithms it supports.
+4) Based on that information, and the request of the client, the pool can now determine what the next protocol and algorithm should be given in the response to the client. It uses this information to extract the NTS client-to-server and server-to-client keys from the TLS session with the client.
+5) The pool then sends a fixed key request to the time source, with the extracted keys and the selected next protocol and algorithm. The time source can then provide the pool with the cookies the client will need to succesfully connect to it.
+6) Finally, the pool combines all the information generated through the process into the response to the client, telling it the selected next protocol, algorithm, providing it with the cookies, and telling it where to find the ntp server of the selected time source.
+
+This session flow requires additional information to be exchanged between the pool and the time source in steps 3 and 5, for which this draft provides records described in the sections below. The exchange of information with the time source from the pool is split into two steps because the information on supported protocols and algorithms needs to be available to the pool before it can actually send over the keys to the time source.
+
+In addition, this split then allows caching of the supported protocols and algorithm information for the time sources. This allows some load reduction on both the time source and the pool itself.
+
 # Communication between the pool and time sources
 
 To facilitate communication between the pool and the time sources, six new NTS records are defined in {{records}}. Together these records provide a way for the pool to provide key exchange services to clients on behalf of the time sources.
@@ -105,7 +119,7 @@ Clients that are aware they are talking to a pool may want to get multiple indep
 # New NTS record types {#records}
 
 ## Keep Alive {#keepalive}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4000)
+Record Type Number: 8
 Critical bit: 0
 
 Indicates a desire to keep the TLS connection active for more than one message exchange. This can be used by a pool to reuse connections to a time source's NTS Key Exchange servers multiple times, reducing load on both the pool and time sources.
@@ -119,7 +133,7 @@ When included in the request or response, the client respectively server MAY, co
 Once a Keep Alive record has been sent by a client, or honored by a server, the TLS connection over which it was sent MUST NOT be used for key extraction. Doing so anyway can result in the reuse of keys and may result in loss of confidentiality or authenticity of the resulting NTP exchanges.
 
 ## Supported Next Protocol List {#supportedprotocol}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4004)
+Record Type Number: 9
 Critical bit: 1
 
 This record can be used by a pool to query time sources about which next protocols they support.
@@ -131,7 +145,7 @@ When receiving this record, servers MUST ignore any client body sent and MUST se
 When receiving this record, a server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
 
 ## Supported Algorithm List {#supportedalgorithm}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4001)
+Record Type Number: 10
 Critical bit: 1
 
 This record can be used by a pool to query time sources about which AEAD algorithms they support.
@@ -145,7 +159,7 @@ When receiving this record, a server MUST NOT negotiate a next protocol, AEAD al
 We include the algorithm key size in the response so that a pool does not itself need knowledge of which AEAD algorithms exist, and what their key sizes are. Instead, it can use the provided key length when extracting keys from the TLS connection between end user and pool. This allows adoption of new AEAD algorithms without any changes to the pool software.
 
 ## List Server Names {#listservernames}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4006)
+Record Type Number: 11
 Critical bit: 1
 
 This record can be used by a pool to query time sources about which server names they use in NTP server records in their responses.
@@ -157,7 +171,7 @@ Servers MUST NOT include this record in a response. When receiving this record, 
 When receiving this record, a server MUST NOT negotiate a next protocol, AEAD algorithm, or keys for this request. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
 
 ## Fixed Key Request {#fixedkey}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4002)
+Record Type Number: 12
 Critical Bit: 1
 
 When a client is properly authenticated, the server SHOULD NOT perform Key Extraction but rather use the keys provided by the client in the extension field. In all other aspects, the response SHALL be the same as that from a regular key exchange session as specified in {{RFC8915}}. This allows a pool to do key negotiation on behalf of its users with the time source's NTS Key Exchange servers, even though it terminates the TLS connection.
@@ -167,7 +181,7 @@ When used, the client MUST provide an AEAD Algorithm Negotiation record with pre
 This record MUST NOT be sent by a server. A server MAY treat this record as unknown for clients that are not authenticated as described in {{poolauth}}.
 
 ## NTP Server Deny {#serverdeny}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4003)
+Record Type Number: 13
 Critical Bit: 0
 
 When provided by a client, indicates a desire to connect to a server other than the server specified in the record. This can be used to ensure a client receives independent NTP servers from one NTS Key Exchange server without having to potentially try multiple times to get a new server.
@@ -177,7 +191,7 @@ A client MAY send multiple of these records if desired. The data in the record S
 MUST NOT be sent by a server. Server MAY at its discretion ignore the request from the client and still provide the given server in an NTPv4 Server Negotiation record.
 
 ## Authentication Token {#authentication}
-Record Type Number: To be assigned by IANA (draft implementations: 0x4005)
+Record Type Number: 14
 Critical Bit: 0
 
 When provided by a client, gives a proof of their identity through a pre-shared secret token. This can be used to allow only certain clients, for example pools, to use certain functionality of an NTS key exchange server. In particular, it can be used to prevent misuse of the keep alive mechanism by clients other than the pool, preventing resource exhaustion denial of service attack.
@@ -216,17 +230,17 @@ To avoid giving multiple time sources access to the key material of the end user
 
 # IANA Considerations
 
-IANA is requested to allocate the following entries in the Network Time Security Key Establishment Record Types registry {{RFC8915}}:
+IANA has early-allocated, and is requested to permanently allocate, the following entries in the Network Time Security Key Establishment Record Types registry {{RFC8915}}:
 
 | Record Type Number | Description | Reference |
 | --- | --- | --- |
-| [[TBD]] | Keep Alive | [[this memo]] {{keepalive}} |
-| [[TBD]] | Supported Next Protocol List | [[this memo]] {{supportedprotocol}} |
-| [[TBD]] | Supported Algorithm List | [[this memo]] {{supportedalgorithm}} |
-| [[TBD]] | List Server Names | [[this memo]] {{listservernames}} |
-| [[TBD]] | Fixed Key Request | [[this memo]] {{fixedkey}} |
-| [[TBD]] | NTP Server Deny | [[this memo]] {{serverdeny}} |
-| [[TBD]] | Authentication Token | [[this memo]] {{authentication}} |
+| 8 | Keep Alive | [[this memo]] {{keepalive}} |
+| 9 | Supported Next Protocol List | [[this memo]] {{supportedprotocol}} |
+| 10 | Supported Algorithm List | [[this memo]] {{supportedalgorithm}} |
+| 11 | List Server Names | [[this memo]] {{listservernames}} |
+| 12 | Fixed Key Request | [[this memo]] {{fixedkey}} |
+| 13 | NTP Server Deny | [[this memo]] {{serverdeny}} |
+| 14 | Authentication Token | [[this memo]] {{authentication}} |
 
 --- back
 
