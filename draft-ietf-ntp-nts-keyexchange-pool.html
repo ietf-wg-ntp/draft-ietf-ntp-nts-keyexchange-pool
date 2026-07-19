@@ -11,23 +11,24 @@
 <meta content="
        The aim of this document is to describe a system for NTS pools that are able to be used by clients without any knowledge beyond plain NTS. The work here focuses purely on creating an intermediate NTS Key Exchange server that can be configured with the addresses of multiple servers and distribute load between them. The parts of pool operation dealing with managing the list of servers are left out of scope for this work. 
     " name="description">
-<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="NTP" name="keyword">
 <meta content="NTS" name="keyword">
 <meta content="draft-ietf-ntp-nts-keyexchange-pool-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.32.0
-    Python 3.12.12
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.4
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.1
     pycountry 24.6.1
     PyYAML 6.0.3
-    requests 2.32.5
-    wcwidth 0.6.0
+    requests 2.33.1
+    wcwidth 0.8.2
 -->
 <link href="draft-ietf-ntp-nts-keyexchange-pool.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -294,16 +295,19 @@ h1, h2, h3, h4, h5, h6 {
   font-size-adjust: 0.5;
   color: var(--title-color);
 }
-h1#title {
-  font-size: 32px;
-  line-height: 40px;
-  clear: both;
-}
-h1#title, h1#rfcnum {
-  margin: 1.5em 0 0.2em;
-}
-h1#rfcnum + h1#title {
-  margin: 0.2em 0;
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
 }
 
 h1, h2, h3 {
@@ -323,10 +327,10 @@ h4, h5, h6 {
 #abstract+p {
   font-size: 18px;
   line-height: 24px;
-}
-#abstract+p code, #abstract+p samp, #abstract+p tt {
-  font-size: 16px;
-  line-height: 0;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
 }
 
 p {
@@ -337,59 +341,59 @@ p {
 div {
   margin: 0;
 }
-.alignRight.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignRight.art-text pre {
-  padding: 0;
-  width: auto;
-}
 .alignRight {
   margin: 1em 0;
-}
-.alignRight > *:first-child {
-  border: none;
-  margin: 0;
-  float: right;
-  clear: both;
-}
-.alignRight > *:nth-child(2) {
-  clear: both;
-  display: block;
-  border: none;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
 }
 svg {
   display: block;
-}
-/* font-family isn't space-separated, but =~ will have to do */
-svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
-  font-family: var(--font-mono);
-}
-.alignCenter.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignCenter.art-text pre {
-  padding: 0;
-  width: auto;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
 }
 .alignCenter {
   margin: 1em 0;
-}
-.alignCenter > *:first-child {
-  border: none;
-  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
-     support flexbox yet.
-  */
-  display: table;
-  margin: 0 auto;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
 }
 
 /* lists */
@@ -427,26 +431,25 @@ dl {
     --indent: 5ch;
     & > dt {
       min-width: calc(var(--indent) - 2ch);
+      float: none;
     }
-  }
-  &.olPercent > dt {
-    float: none;
   }
 
   dl > dd > & {
     margin-top: 0.5em;
     margin-bottom: 0;
   }
-}
-dl:not(.dlNewline) > dt {
-  float: left;
-  margin-right: 2ch;
-  min-width: 8ch;
-}
-dl > dd {
-  margin-bottom: .8em;
-  margin-left: var(--indent) !important; /* stupid element overrides */
-  min-height: 2ex;
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -462,20 +465,22 @@ dl > dd {
 }
 
 /* links */
-a, a[href].selfRef:hover {
+a {
   text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
 }
-a[href] {
-  color: var(--link-color);
-}
-a[href].selfRef, .iref + a[href].internal {
+.iref + a[href].internal {
   color: var(--text-color);
-}
-a[href]:hover {
-  text-decoration: underline;
-}
-a[href].selfRef:hover {
-  background-color: var(--highlight-color);
 }
 a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
@@ -511,9 +516,9 @@ img {
 figure {
   margin: 0.5em 0;
   padding: 0;
-}
-figure blockquote {
-  margin: 0.8em 0.4em 0.4em;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
 }
 figcaption, caption {
   font-style: italic;
@@ -523,17 +528,19 @@ figcaption, caption {
 }
 @media screen {
   /* Auto-collapse boilerplate. */
-  :is(#status-of-memo, #copyright) p {
-    margin: -2px 0;
-    max-height: 0;
-    transition: max-height 2s ease, margin 0.5s ease 0.5s;
-    overflow: hidden;
-  }
-  :is(#status-of-memo, #copyright):hover p,
-  :is(#status-of-memo, #copyright) h2:target ~ p {
-    margin: 0.5em 0;
-    max-height: 500px;
-    overflow: auto;
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
   }
   pre, svg {
     display: inline-block;
@@ -583,25 +590,17 @@ table {
   max-width: 100%;
   margin: 0 0 1em;
   border-collapse: collapse;
-}
-table.right {
-  margin-left: auto;
-}
-table.center {
-  margin-left: auto;
-  margin-right: auto;
-}
-table.left {
-  margin-right: auto;
-}
-table .text-left {
-  text-align: left;
-}
-table .text-center {
-  text-align: center;
-}
-table .text-right {
-  text-align: right;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
 }
 
 thead, tbody {
@@ -621,13 +620,6 @@ th {
 :is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
 }
-table caption {
-  margin: 0;
-  padding: 3px 0 3px 1em;
-}
-table p {
-  margin: 0;
-}
 
 /* pilcrow */
 a.pilcrow {
@@ -638,18 +630,16 @@ a.pilcrow {
     color: var(--pilcrow-weak);
     &:hover { text-decoration: none; }
   }
-}
-@media not print {
-  :hover > a.pilcrow, a.pilcrow:focus {
-    opacity: 1;
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
   }
-  a.pilcrow[href]:hover {
-    color: var(--pilcrow-strong);
-    background-color: transparent;
-  }
-}
-@media print {
-  a.pilcrow {
+  @media print {
     display: none;
   }
 }
@@ -708,9 +698,9 @@ sub, sup {
   font-size: 0.9em;
   font-style: italic;
   margin-top: 2em;
-}
-.docInfo .prepared {
-  float: right;
+  & .prepared {
+    float: right;
+  }
 }
 
 /* table of contents */
@@ -800,23 +790,27 @@ hr.addr {
   max-width: calc(100% - 16px);
 }
 @media (min-width: 500px) {
-  #authors-addresses > section {
-    column-count: 2;
-    column-gap: 20px;
-  }
-  #authors-addresses > section > h2 {
-    column-span: all;
-  }
-  /* hack for break-inside: avoid-column */
-  #authors-addresses address {
-    display: inline-block;
-    break-inside: avoid-column;
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
   }
 }
 
 /* Comments */
-.rfcEditorRemove p:first-of-type {
-  font-style: italic;
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
 }
 .cref {
   background-color: rgba(249, 232, 105, 0.3);
@@ -827,19 +821,21 @@ hr.addr {
 }
 
 @media screen {
-  #toc nav {
-    font-family: var(--font-title);
-    font-weight: 360;
-    & > ul { margin-bottom: 2em; }
-    & ul {
-      margin: 0 0 0 4px;
-      & :is(p, li) {
-        margin: 2px 0;
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
       }
     }
-  }
-  #toc a.toplink {
-    float: right;
+    & a.toplink {
+      float: right;
+    }
   }
 }
 @media not screen {
@@ -860,54 +856,54 @@ hr.addr {
     margin: 0;
     border-bottom: 1px solid #ccc;
     opacity: 0.6;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 2px 0 2px 6px;
-    padding-right: 1em;
-    font-size: 18px;
-    line-height: 24px;
-    min-width: 190px;
-    text-align: right;
-    background-color: #444;
-    color: white;
-    cursor: pointer;
-    &::before { /* css hamburger */
-      float: right;
-      position: relative;
-      width: 1em;
-      height: 1px;
-      left: -164px;
-      margin: 8px 0 0 0;
-      background: white none repeat scroll 0 0;
-      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
-      content: "";
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
     }
-  }
-  #toc nav {
-    display: none;
-    background-color: var(--background-color);
-    padding: 0.5em 1em 1em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    height: calc(100vh - 48px);
-    border-left: 1px solid #ddd;
-  }
-  #toc.active {
-    opacity: 1;
-    & nav { display: block; }
-  }
-  /* Make the collapsed ToC header render white on gray also when it's a link */
-  #toc h2 a,
-  #toc h2 a:is(:link, :focus, :hover),
-  #toc a.toplink,
-  #toc a.toplink:hover {
-    color: white;
-    background-color: #444;
-    text-decoration: none;
-  }
-  #toc a.toplink {
-    margin: 2px 0.5em 0;
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
   }
 }
 
@@ -926,26 +922,26 @@ hr.addr {
     margin: 0;
     padding: 0;
     z-index: 1;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 0.25em 1em 1em 0;
-  }
-  #toc nav {
-    display: block;
-    height: calc(90vh - 84px);
-    bottom: 0;
-    padding: 0.5em 0 2em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
   }
   img { /* future proofing */
     max-width: 100%;
     height: auto;
-  }
-  #toc a.toplink {
-    margin: 8px 0.5em 0;
   }
 }
 
@@ -961,12 +957,13 @@ hr.addr {
   #n-copyright-notice {
     border-bottom: none;
   }
-  #toc, #n-introduction {
-    page-break-before: always;
-  }
   #toc {
+    page-break-before: always;
     border-top: none;
     padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
   }
   figure, pre, .vcard {
     page-break-inside: avoid;
@@ -1028,17 +1025,19 @@ hr.addr {
 }
 
 /* SVG Trick: a prefix match works because only black and white are allowed */
-svg :is([stroke="black"], [stroke^="#000"]) {
-  stroke: var(--text-color);
-}
-svg :is([stroke="white"], [stroke^="#fff"]) {
-  stroke: var(--background-color);
-}
-svg :is([fill="black"], [fill^="#000"], :not([fill])) {
-  fill: var(--text-color);
-}
-svg :is([fill="white"], [fill^="#fff"]) {
-  fill: var(--background-color);
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
 }
 </style>
 
@@ -1048,11 +1047,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">NTS pools</td>
-<td class="right">March 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Venhoek, et al.</td>
-<td class="center">Expires 21 September 2026</td>
+<td class="center">Expires 20 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1065,12 +1064,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ntp-nts-keyexchange-pool-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-03-20" class="published">20 March 2026</time>
+<time datetime="2026-07-19" class="published">19 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-09-21">21 September 2026</time></dd>
+<dd class="expires"><time datetime="2027-01-20">20 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1128,7 +1127,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 21 September 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 20 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1164,7 +1163,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-general-pool-architecture" class="internal xref">General pool architecture</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-general-pool-architecture" class="internal xref">General pool architecture</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-session-flow-between-client" class="internal xref">Session flow between client, pool and time source</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
             <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-communication-between-the-p" class="internal xref">Communication between the pool and time sources</a></p>
@@ -1285,6 +1289,22 @@ appear in all capitals, as shown here.<a href="#section-2-4" class="pilcrow">¶<
       </h2>
 <p id="section-3-1">We propose a pool model where the pool provides an NTS Key Exchange service to the outside world. A major advantage of this model is that it avoids having to distribute certificates to all time sources. Contrary to <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>, there is no direct TLS connection between the client and the selected time source.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <p id="section-3-2">In <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>, cookies are generated based on key material that is extracted from this TLS connection. Our proposed model instead establishes two TLS connections: between the client and the pool, and between the pool and the time source. Because cookies need to be generated using key material from the client, the pool extracts this key material and sends it to the time source. The time source uses this key material (rather than key material extracted from its connection with the pool) to generate cookies. This way, the pool can remain oblivious to the cookie format of the time source.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<div id="session-flow-between-client-pool-and-time-source">
+<section id="section-3.1">
+        <h3 id="name-session-flow-between-client">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-session-flow-between-client" class="section-name selfRef">Session flow between client, pool and time source</a>
+        </h3>
+<p id="section-3.1-1">In our proposed pool model, a session of a client with the pool is handled through the following steps:
+1) The client presents itself to the pools NTS key exchange server, sending it its request.
+2) The pool parses this requests, and assigns a time source to the request.
+3) The pool then asks that time source which protocols and algorithms it supports.
+4) Based on that information, and the request of the client, the pool can now determine what the next protocol and algorithm should be given in the response to the client. It uses this information to extract the NTS client-to-server and server-to-client keys from the TLS session with the client.
+5) The pool then sends a fixed key request to the time source, with the extracted keys and the selected next protocol and algorithm. The time source can then provide the pool with the cookies the client will need to succesfully connect to it.
+6) Finally, the pool combines all the information generated through the process into the response to the client, telling it the selected next protocol, algorithm, providing it with the cookies, and telling it where to find the ntp server of the selected time source.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">This session flow requires additional information to be exchanged between the pool and the time source in steps 3 and 5, for which this draft provides records described in the sections below. The exchange of information with the time source from the pool is split into two steps because the information on supported protocols and algorithms needs to be available to the pool before it can actually send over the keys to the time source.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">In addition, this split then allows caching of the supported protocols and algorithm information for the time sources. This allows some load reduction on both the time source and the pool itself.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="communication-between-the-pool-and-time-sources">
@@ -1327,7 +1347,7 @@ appear in all capitals, as shown here.<a href="#section-2-4" class="pilcrow">¶<
         <h3 id="name-keep-alive">
 <a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-keep-alive" class="section-name selfRef">Keep Alive</a>
         </h3>
-<p id="section-6.1-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4000)
+<p id="section-6.1-1">Record Type Number: 8
 Critical bit: 0<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.1-2">Indicates a desire to keep the TLS connection active for more than one message exchange. This can be used by a pool to reuse connections to a time source's NTS Key Exchange servers multiple times, reducing load on both the pool and time sources.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
 <p id="section-6.1-3">When a client sends this record the body <span class="bcp14">MUST</span> have size 0. A client <span class="bcp14">MUST NOT</span> use Keep Alive unless the request contains a record type allowing the use of Keep Alive. Within this specification, that is limited to the Supported Protocol List and Fixed Key Request records. A server <span class="bcp14">SHOULD</span> ignore any body for the Keep Alive record.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
@@ -1341,7 +1361,7 @@ Critical bit: 0<a href="#section-6.1-1" class="pilcrow">¶</a></p>
         <h3 id="name-supported-next-protocol-lis">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-supported-next-protocol-lis" class="section-name selfRef">Supported Next Protocol List</a>
         </h3>
-<p id="section-6.2-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4004)
+<p id="section-6.2-1">Record Type Number: 9
 Critical bit: 1<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">This record can be used by a pool to query time sources about which next protocols they support.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
 <p id="section-6.2-3">When a client sends this record the body <span class="bcp14">MUST</span> have size 0. Clients <span class="bcp14">MAY</span> use Keep Alive in combination with this record. Contrary to <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>, a request with this record <span class="bcp14">SHOULD NOT</span> include a "Next Protocol Negotiation", "AEAD Algorithm Negotiation" or "Fixed Key Request" record.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
@@ -1354,7 +1374,7 @@ Critical bit: 1<a href="#section-6.2-1" class="pilcrow">¶</a></p>
         <h3 id="name-supported-algorithm-list">
 <a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-supported-algorithm-list" class="section-name selfRef">Supported Algorithm List</a>
         </h3>
-<p id="section-6.3-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4001)
+<p id="section-6.3-1">Record Type Number: 10
 Critical bit: 1<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 <p id="section-6.3-2">This record can be used by a pool to query time sources about which AEAD algorithms they support.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
 <p id="section-6.3-3">When a client sends this record the body <span class="bcp14">MUST</span> have size 0. Clients <span class="bcp14">MAY</span> use Keep Alive in combination with this record. Contrary to <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>, a request with this record <span class="bcp14">SHOULD NOT</span> include a "Next Protocol Negotiation", "AEAD Algorithm Negotiation" or "Fixed Key Request" record.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
@@ -1368,7 +1388,7 @@ Critical bit: 1<a href="#section-6.3-1" class="pilcrow">¶</a></p>
         <h3 id="name-list-server-names">
 <a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-list-server-names" class="section-name selfRef">List Server Names</a>
         </h3>
-<p id="section-6.4-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4006)
+<p id="section-6.4-1">Record Type Number: 11
 Critical bit: 1<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 <p id="section-6.4-2">This record can be used by a pool to query time sources about which server names they use in NTP server records in their responses.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
 <p id="section-6.4-3">When a client sends this record the body <span class="bcp14">MUST</span> have size 0. Clients <span class="bcp14">MAY</span> use Keep Alive in combination with this record. Contrary to <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>, a request with this record <span class="bcp14">SHOULD NOT</span> include a "Next Protocol Negotiation", "AEAD Algorithm Negotiation" or "Fixed Key Request" record.<a href="#section-6.4-3" class="pilcrow">¶</a></p>
@@ -1381,7 +1401,7 @@ Critical bit: 1<a href="#section-6.4-1" class="pilcrow">¶</a></p>
         <h3 id="name-fixed-key-request">
 <a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-fixed-key-request" class="section-name selfRef">Fixed Key Request</a>
         </h3>
-<p id="section-6.5-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4002)
+<p id="section-6.5-1">Record Type Number: 12
 Critical Bit: 1<a href="#section-6.5-1" class="pilcrow">¶</a></p>
 <p id="section-6.5-2">When a client is properly authenticated, the server <span class="bcp14">SHOULD NOT</span> perform Key Extraction but rather use the keys provided by the client in the extension field. In all other aspects, the response <span class="bcp14">SHALL</span> be the same as that from a regular key exchange session as specified in <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>. This allows a pool to do key negotiation on behalf of its users with the time source's NTS Key Exchange servers, even though it terminates the TLS connection.<a href="#section-6.5-2" class="pilcrow">¶</a></p>
 <p id="section-6.5-3">When used, the client <span class="bcp14">MUST</span> provide an AEAD Algorithm Negotiation record with precisely one algorithm, and a Next Protocol Negotiation record with precisely one next protocol. The data in the Fixed Key Request record must have length twice the key length N of the AEAD algorithm in the AEAD Algorithm Negotiation record. The first N bytes <span class="bcp14">MUST</span> be the C2S Key and the second set of N bytes <span class="bcp14">MUST</span> be the S2C key. Clients <span class="bcp14">MAY</span> use Keep Alive in combination with this record.<a href="#section-6.5-3" class="pilcrow">¶</a></p>
@@ -1393,7 +1413,7 @@ Critical Bit: 1<a href="#section-6.5-1" class="pilcrow">¶</a></p>
         <h3 id="name-ntp-server-deny">
 <a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-ntp-server-deny" class="section-name selfRef">NTP Server Deny</a>
         </h3>
-<p id="section-6.6-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4003)
+<p id="section-6.6-1">Record Type Number: 13
 Critical Bit: 0<a href="#section-6.6-1" class="pilcrow">¶</a></p>
 <p id="section-6.6-2">When provided by a client, indicates a desire to connect to a server other than the server specified in the record. This can be used to ensure a client receives independent NTP servers from one NTS Key Exchange server without having to potentially try multiple times to get a new server.<a href="#section-6.6-2" class="pilcrow">¶</a></p>
 <p id="section-6.6-3">A client <span class="bcp14">MAY</span> send multiple of these records if desired. The data in the record <span class="bcp14">SHOULD</span> match that given through an NTPv4 Server Negotiation received in an earlier response from the same NTS Key Exchange server.<a href="#section-6.6-3" class="pilcrow">¶</a></p>
@@ -1405,7 +1425,7 @@ Critical Bit: 0<a href="#section-6.6-1" class="pilcrow">¶</a></p>
         <h3 id="name-authentication-token">
 <a href="#section-6.7" class="section-number selfRef">6.7. </a><a href="#name-authentication-token" class="section-name selfRef">Authentication Token</a>
         </h3>
-<p id="section-6.7-1">Record Type Number: To be assigned by IANA (draft implementations: 0x4005)
+<p id="section-6.7-1">Record Type Number: 14
 Critical Bit: 0<a href="#section-6.7-1" class="pilcrow">¶</a></p>
 <p id="section-6.7-2">When provided by a client, gives a proof of their identity through a pre-shared secret token. This can be used to allow only certain clients, for example pools, to use certain functionality of an NTS key exchange server. In particular, it can be used to prevent misuse of the keep alive mechanism by clients other than the pool, preventing resource exhaustion denial of service attack.<a href="#section-6.7-2" class="pilcrow">¶</a></p>
 <p id="section-6.7-3">This record <span class="bcp14">MUST</span> be sent before records that may be refused if not properly authenticated. A client <span class="bcp14">MUST NOT</span> send more than 1 of this record. The data in the record should be an ASCII string that <span class="bcp14">MUST NOT</span> be null terminated, previously agreed through an out of scope mechanism.<a href="#section-6.7-3" class="pilcrow">¶</a></p>
@@ -1463,7 +1483,7 @@ Critical Bit: 0<a href="#section-6.7-1" class="pilcrow">¶</a></p>
       <h2 id="name-iana-considerations">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-8-1">IANA is requested to allocate the following entries in the Network Time Security Key Establishment Record Types registry <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>:<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-1">IANA has early-allocated, and is requested to permanently allocate, the following entries in the Network Time Security Key Establishment Record Types registry <span>[<a href="#RFC8915" class="cite xref">RFC8915</a>]</span>:<a href="#section-8-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
         <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1475,43 +1495,43 @@ Critical Bit: 0<a href="#section-6.7-1" class="pilcrow">¶</a></p>
         </thead>
         <tbody>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">8</td>
             <td class="text-left" rowspan="1" colspan="1">Keep Alive</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#keepalive" class="auto internal xref">Section 6.1</a>
 </td>
           </tr>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">9</td>
             <td class="text-left" rowspan="1" colspan="1">Supported Next Protocol List</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#supportedprotocol" class="auto internal xref">Section 6.2</a>
 </td>
           </tr>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">10</td>
             <td class="text-left" rowspan="1" colspan="1">Supported Algorithm List</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#supportedalgorithm" class="auto internal xref">Section 6.3</a>
 </td>
           </tr>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">11</td>
             <td class="text-left" rowspan="1" colspan="1">List Server Names</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#listservernames" class="auto internal xref">Section 6.4</a>
 </td>
           </tr>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">12</td>
             <td class="text-left" rowspan="1" colspan="1">Fixed Key Request</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#fixedkey" class="auto internal xref">Section 6.5</a>
 </td>
           </tr>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">13</td>
             <td class="text-left" rowspan="1" colspan="1">NTP Server Deny</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#serverdeny" class="auto internal xref">Section 6.6</a>
 </td>
           </tr>
           <tr>
-            <td class="text-left" rowspan="1" colspan="1">[[TBD]]</td>
+            <td class="text-left" rowspan="1" colspan="1">14</td>
             <td class="text-left" rowspan="1" colspan="1">Authentication Token</td>
             <td class="text-left" rowspan="1" colspan="1">[[this memo]] <a href="#authentication" class="auto internal xref">Section 6.7</a>
 </td>

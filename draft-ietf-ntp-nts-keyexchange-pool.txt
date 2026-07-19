@@ -5,9 +5,9 @@
 Network Time Protocols                                        D. Venhoek
 Internet-Draft                                                R. Nijveld
 Intended status: Experimental                   Trifecta Tech Foundation
-Expires: 21 September 2026                               M. Schoolderman
+Expires: 20 January 2027                                 M. Schoolderman
                                                         Tweede golf B.V.
-                                                           20 March 2026
+                                                            19 July 2026
 
 
                    NTS extensions for enabling pools
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 September 2026.
+   This Internet-Draft will expire on 20 January 2027.
 
 Copyright Notice
 
@@ -77,6 +77,7 @@ Table of Contents
    1.  Introduction
    2.  Conventions and Definitions
    3.  General pool architecture
+     3.1.  Session flow between client, pool and time source
    4.  Communication between the pool and time sources
      4.1.  Authenticating the pool to time sources
    5.  Communication between clients and the pool
@@ -156,6 +157,40 @@ Table of Contents
    this key material (rather than key material extracted from its
    connection with the pool) to generate cookies.  This way, the pool
    can remain oblivious to the cookie format of the time source.
+
+3.1.  Session flow between client, pool and time source
+
+   In our proposed pool model, a session of a client with the pool is
+   handled through the following steps: 1) The client presents itself to
+   the pools NTS key exchange server, sending it its request. 2) The
+   pool parses this requests, and assigns a time source to the request.
+   3) The pool then asks that time source which protocols and algorithms
+   it supports. 4) Based on that information, and the request of the
+   client, the pool can now determine what the next protocol and
+   algorithm should be given in the response to the client.  It uses
+   this information to extract the NTS client-to-server and server-to-
+   client keys from the TLS session with the client. 5) The pool then
+   sends a fixed key request to the time source, with the extracted keys
+   and the selected next protocol and algorithm.  The time source can
+   then provide the pool with the cookies the client will need to
+   succesfully connect to it. 6) Finally, the pool combines all the
+   information generated through the process into the response to the
+   client, telling it the selected next protocol, algorithm, providing
+   it with the cookies, and telling it where to find the ntp server of
+   the selected time source.
+
+   This session flow requires additional information to be exchanged
+   between the pool and the time source in steps 3 and 5, for which this
+   draft provides records described in the sections below.  The exchange
+   of information with the time source from the pool is split into two
+   steps because the information on supported protocols and algorithms
+   needs to be available to the pool before it can actually send over
+   the keys to the time source.
+
+   In addition, this split then allows caching of the supported
+   protocols and algorithm information for the time sources.  This
+   allows some load reduction on both the time source and the pool
+   itself.
 
 4.  Communication between the pool and time sources
 
@@ -238,8 +273,7 @@ Table of Contents
 
 6.1.  Keep Alive
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4000) Critical bit: 0
+   Record Type Number: 8 Critical bit: 0
 
    Indicates a desire to keep the TLS connection active for more than
    one message exchange.  This can be used by a pool to reuse
@@ -273,8 +307,7 @@ Table of Contents
 
 6.2.  Supported Next Protocol List
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4004) Critical bit: 1
+   Record Type Number: 9 Critical bit: 1
 
    This record can be used by a pool to query time sources about which
    next protocols they support.
@@ -297,8 +330,7 @@ Table of Contents
 
 6.3.  Supported Algorithm List
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4001) Critical bit: 1
+   Record Type Number: 10 Critical bit: 1
 
    This record can be used by a pool to query time sources about which
    AEAD algorithms they support.
@@ -329,8 +361,7 @@ Table of Contents
 
 6.4.  List Server Names
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4006) Critical bit: 1
+   Record Type Number: 11 Critical bit: 1
 
    This record can be used by a pool to query time sources about which
    server names they use in NTP server records in their responses.
@@ -355,8 +386,7 @@ Table of Contents
 
 6.5.  Fixed Key Request
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4002) Critical Bit: 1
+   Record Type Number: 12 Critical Bit: 1
 
    When a client is properly authenticated, the server SHOULD NOT
    perform Key Extraction but rather use the keys provided by the client
@@ -380,8 +410,7 @@ Table of Contents
 
 6.6.  NTP Server Deny
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4003) Critical Bit: 0
+   Record Type Number: 13 Critical Bit: 0
 
    When provided by a client, indicates a desire to connect to a server
    other than the server specified in the record.  This can be used to
@@ -400,8 +429,7 @@ Table of Contents
 
 6.7.  Authentication Token
 
-   Record Type Number: To be assigned by IANA (draft implementations:
-   0x4005) Critical Bit: 0
+   Record Type Number: 14 Critical Bit: 0
 
    When provided by a client, gives a proof of their identity through a
    pre-shared secret token.  This can be used to allow only certain
@@ -503,30 +531,31 @@ Table of Contents
 
 8.  IANA Considerations
 
-   IANA is requested to allocate the following entries in the Network
-   Time Security Key Establishment Record Types registry [RFC8915]:
+   IANA has early-allocated, and is requested to permanently allocate,
+   the following entries in the Network Time Security Key Establishment
+   Record Types registry [RFC8915]:
 
     +====================+================+===========================+
     | Record Type Number | Description    | Reference                 |
     +====================+================+===========================+
-    | [[TBD]]            | Keep Alive     | [[this memo]] Section 6.1 |
+    | 8                  | Keep Alive     | [[this memo]] Section 6.1 |
     +--------------------+----------------+---------------------------+
-    | [[TBD]]            | Supported Next | [[this memo]] Section 6.2 |
+    | 9                  | Supported Next | [[this memo]] Section 6.2 |
     |                    | Protocol List  |                           |
     +--------------------+----------------+---------------------------+
-    | [[TBD]]            | Supported      | [[this memo]] Section 6.3 |
+    | 10                 | Supported      | [[this memo]] Section 6.3 |
     |                    | Algorithm List |                           |
     +--------------------+----------------+---------------------------+
-    | [[TBD]]            | List Server    | [[this memo]] Section 6.4 |
+    | 11                 | List Server    | [[this memo]] Section 6.4 |
     |                    | Names          |                           |
     +--------------------+----------------+---------------------------+
-    | [[TBD]]            | Fixed Key      | [[this memo]] Section 6.5 |
+    | 12                 | Fixed Key      | [[this memo]] Section 6.5 |
     |                    | Request        |                           |
     +--------------------+----------------+---------------------------+
-    | [[TBD]]            | NTP Server     | [[this memo]] Section 6.6 |
+    | 13                 | NTP Server     | [[this memo]] Section 6.6 |
     |                    | Deny           |                           |
     +--------------------+----------------+---------------------------+
-    | [[TBD]]            | Authentication | [[this memo]] Section 6.7 |
+    | 14                 | Authentication | [[this memo]] Section 6.7 |
     |                    | Token          |                           |
     +--------------------+----------------+---------------------------+
 
